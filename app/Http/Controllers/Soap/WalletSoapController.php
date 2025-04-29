@@ -56,5 +56,51 @@ class WalletSoapController extends Controller
         }
     }
 
-   
+    // MÉTODO SOAP: Recargar billetera
+    public function recargarBilletera($documento, $celular, $monto)
+    {
+        if (!$documento || !$celular || !$monto) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Todos los campos son requeridos',
+                'data' => null
+            ];
+        }
+
+        try {
+            // Buscar cliente con Eloquent
+            $cliente = Cliente::where('documento', $documento)
+                ->where('celular', $celular)
+                ->first();
+
+            if (!$cliente) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Cliente no encontrado',
+                    'data' => null
+                ];
+            }
+
+            // Actualizar saldo
+            $cliente->saldo += (float) $monto;
+            $cliente->save();
+
+            return [
+                'codigo' => '00',
+                'mensaje' => 'Recarga exitosa',
+                'data' => ['saldo' => $cliente->saldo]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Error al recargar: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+  
+
+
+
 }
