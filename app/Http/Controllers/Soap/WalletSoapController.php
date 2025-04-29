@@ -99,7 +99,66 @@ class WalletSoapController extends Controller
         }
     }
 
-  
+    // MÉTODO SOAP: Generar Compra
+    public function generarCompra($documento, $celular, $montoCompra)
+    {
+        if (!$documento || !$celular || !$montoCompra) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Todos los campos son requeridos',
+                'data' => null
+            ];
+        }
+
+        try {
+            $cliente = Cliente::where('documento', $documento)
+                ->where('celular', $celular)
+                ->first();
+
+            if (!$cliente) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Cliente no encontrado',
+                    'data' => null
+                ];
+            }
+
+            if ($cliente->saldo < (float) $montoCompra) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Saldo insuficiente',
+                    'data' => null
+                ];
+            }
+
+            $sessionId = (string) Str::uuid();
+            $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            Compra::create([
+                'cliente_id' => $cliente->id,
+                'session_id' => $sessionId,
+                'token' => $token,
+                'monto' => (float) $montoCompra,
+                'estado' => 'pendiente',
+            ]);
+
+            return [
+                'codigo' => '00',
+                'mensaje' => 'Compra creada exitosamente. Token enviado (simulado).',
+                'data' => [
+                    'session_id' => $sessionId,
+                    'token' => $token
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Error al generar compra: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
 
 
 
