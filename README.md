@@ -106,7 +106,7 @@ app/
 │   ├── Cliente.php
 │   └── Compra.php
 routes/
-└── soap.php (si configurado, o rutas web/api según arquitectura)
+└── web.php 
 ```
 
 ---
