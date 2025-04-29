@@ -159,7 +159,76 @@ class WalletSoapController extends Controller
         }
     }
 
+    // MÉTODO SOAP: Confirmar Pago
+    public function confirmarPago($sessionId, $token)
+    {
+        if (!$sessionId || !$token) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Todos los campos son requeridos',
+                'data' => null
+            ];
+        }
 
+        try {
+            $compra = Compra::where('session_id', $sessionId)
+                ->where('estado', 'pendiente')
+                ->first();
+
+            if (!$compra) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Compra no encontrada o ya confirmada',
+                    'data' => null
+                ];
+            }
+
+            if ($compra->token !== $token) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Token inválido',
+                    'data' => null
+                ];
+            }
+
+            $cliente = Cliente::find($compra->cliente_id);
+
+            if (!$cliente) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Cliente no encontrado',
+                    'data' => null
+                ];
+            }
+
+            if ($cliente->saldo < $compra->monto) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Saldo insuficiente al confirmar',
+                    'data' => null
+                ];
+            }
+
+            // Actualizar saldo y estado
+            $cliente->saldo -= $compra->monto;
+            $cliente->save();
+
+            $compra->estado = 'confirmado';
+            $compra->save();
+
+            return [
+                'codigo' => '00',
+                'mensaje' => 'Pago confirmado exitosamente',
+                'data' => null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Error al confirmar pago: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 
 
 }
