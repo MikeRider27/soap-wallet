@@ -230,5 +230,43 @@ class WalletSoapController extends Controller
         }
     }
 
+    // MÉTODO SOAP: Consultar Saldo
+    public function consultarSaldo($documento, $celular)
+    {
+        if (!$documento || !$celular) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Documento y celular son requeridos',
+                'data' => null
+            ];
+        }
 
+        try {
+            $cliente = Cliente::where('documento', $documento)
+                ->where('celular', $celular)
+                ->first();
+
+            if (!$cliente) {
+                return [
+                    'codigo' => '99',
+                    'mensaje' => 'Cliente no encontrado',
+                    'data' => null
+                ];
+            }
+
+            return [
+                'codigo' => '00',
+                'mensaje' => 'Consulta exitosa',
+                'data' => [
+                    'saldo' => $cliente->saldo
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'codigo' => '99',
+                'mensaje' => 'Error al consultar saldo: ' . $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
 }
